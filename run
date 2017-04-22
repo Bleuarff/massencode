@@ -1,0 +1,16 @@
+#!/bin/bash
+
+file="$1"
+outfile=${file%.flac}.mp3
+
+
+eval $(metaflac --export-tags-to - "$file" | sed "s/=\(.*\)/='\1'/")
+metaflac --export-picture-to "${file%.flac}.jpg" "$file"
+
+flac -cd "$file" | lame --noreplaygain -V 2 \
+        --add-id3v2 --tt "$TITLE" --ta "$ARTIST" --tl "$ALBUM" \
+        --ty "$DATE" --tn "$TRACKNUMBER" --tg "$GENRE" \
+        --ti "${file%.flac}.jpg" \
+        - "$outfile"
+
+rm "${file%.flac}.jpg"
