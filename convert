@@ -1,0 +1,38 @@
+#!/bin/bash
+
+# convert flac into mp3, or copy file in destination dir
+
+path="$1" # input dir
+outDir="$2" # output dir
+file="$3" # source file
+
+# replace input path with output path
+outfile=$(echo "$file" | sed "s:$path:$outDir:")
+# echo $outfile
+dir=$(dirname "$outfile")
+# echo $dir
+
+# create missing directories
+mkdir -p "$dir"
+
+if [ ${file: -5} = ".flac" ]
+  then
+    # replace file extension
+    outfile=${outfile%.flac}.mp3
+    echo $outfile
+    # extract tags & image
+    eval $(metaflac --export-tags-to - "$file" | sed "s/=\(.*\)/='\1'/")
+    metaflac --export-picture-to "${outfile%.mp3}.jpg" "$file"
+
+    # flac: encode into mp3
+    flac -cds "$file" | lame -S --noreplaygain -V 2 \
+            --add-id3v2 --tt "$TITLE" --ta "$ARTIST" --tl "$ALBUM" \
+            --ty "$DATE" --tn "$TRACKNUMBER" --tg "$GENRE" \
+            --ti "${outfile%.mp3}.jpg" \
+            - "$outfile"
+
+    rm "${outfile%.mp3}.jpg" # delete cover image
+  else
+    # not flac (image): copy file
+    cp "$file" "$outfile"
+fi
