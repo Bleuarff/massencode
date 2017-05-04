@@ -1,0 +1,27 @@
+#!/bin/bash
+
+# convert flac into mp3, or copy file in destination dir
+
+path="$1" # input dir
+outDir="$2" # output dir
+file="$3" # source file
+
+# replace input path with output path
+outfile=$(echo "$file" | sed "s:$path:$outDir:")
+# echo $outfile
+dir=$(dirname "$outfile")
+# echo $dir
+
+# create missing directories
+mkdir -p "$dir"
+
+if [ ${file: -5} = ".flac" ]
+  then
+    # replace file extension
+    outfile=${outfile%.flac}.opus
+    echo $outfile
+    opusenc --bitrate 192 --vbr --comp 10 "$file" "$outfile"
+  else
+    # not flac (image): copy file
+    cp "$file" "$outfile"
+fi
