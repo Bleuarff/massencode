@@ -2,38 +2,38 @@
 
 # convert flac into mp3, or copy file in destination dir
 
-path="$1" # input dir
-outDir="$2" # output dir
-file="$3" # source file
+file="$1" # source file
+outputDir="$2" # output dir
 
-# replace input path with output path
-outfile=$(echo "$file" | sed "s:$path:$outDir:")
-# echo $outfile
-dir=$(dirname "$outfile")
-# echo $dir
+mkdir -p "$outputDir" # create outputDir if needed
 
-# create missing directories
-mkdir -p "$dir"
+# get filename and replace file extension
+fileName=$(basename "$file")
+outputFile=${fileName%.flac}.mp3
+# echo "f: ${outputFile}"
+
+outputDir=$(echo "$outputDir" | sed 's:/*$::') # remove trailing slashs, to be consistent
+outputFile="${outputDir}/${outputFile}" # combine to obtain output filepath
+
+echo "outfile: ${outputFile}"
 
 if [ ${file: -5} = ".flac" ]
   then
-    # replace file extension
-    outfile=${outfile%.flac}.mp3
-    echo $outfile
     # extract tags & image
     eval $(metaflac --export-tags-to - "$file" | sed "s/=\(.*\)/=\"\1\"/")
-    metaflac --export-picture-to "${outfile%.mp3}.jpg" "$file"
+    metaflac --export-picture-to "${outputFile%.mp3}.jpg" "$file"
 
     # flac: encode into mp3
     flac -cds "$file" | lame -S --noreplaygain -V 2 \
             --add-id3v2 --tt "$TITLE" --ta "$ARTIST" --tl "$ALBUM" \
-            --ty "$DATE" --tn "$TRACKNUMBER/$TOTALTRACKS" --tg "$GENRE" \
+            --ty "$DATE" --tn "$TRACKNUMBER/$TRACKTOTAL" --tg "$GENRE" \
             --tv "TPOS=$DISCNUMBER/$TOTALDISCS" \
-            --ti "${outfile%.mp3}.jpg" \
-            - "$outfile"
+            --ti "${outputFile%.mp3}.jpg" \
+            - "$outputFile"
 
-    rm "${outfile%.mp3}.jpg" # delete cover image
-  else
-    # not flac (image): copy file
-    cp "$file" "$outfile"
+    rm "${outputFile%.mp3}.jpg" # delete cover image
+  else # not flac (image): copy file
+    # TODO: get path to create output non-flac
+    echo "noflac: ${}"
+    # cp "$file" "$outputFile"
 fi

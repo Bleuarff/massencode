@@ -12,8 +12,8 @@
 
 *******************************************************************************/
 const exec = require('child_process').exec,
-    path = require('path'),
-    numCpus = require('os').cpus().length
+      path = require('path'),
+      numCpus = require('os').cpus().length
 
 var inDir = process.argv[2], // input dir
     outDir = process.argv[3], // output dir
@@ -31,10 +31,12 @@ var options = {
 script = codec === 'mp3' ? 'encode_mp3' : 'encode_opus'
 
 // find all files, filtering for flac & jpg
-exec(`find ${inDir} -type f -iregex ".*[flac|jpg]$"`, options, (error, stdout, stderr) => {
+const findCmd =`find "${inDir}" -type f -iregex ".*[flac|jpg]$"`
+console.log('RUN: ' + findCmd)
+exec(findCmd, options, (error, stdout, stderr) => {
   if (error || stderr){
-    console.error(`exec error: ${error || stderr}`);
-    return;
+    console.error(`exec error: ${error || stderr}`)
+    return
   }
 
   files = stdout.split('\n')
@@ -52,7 +54,11 @@ function encodeOne(){
   if (files.length){
     let file = files.shift() // get a file path from array
 
-    exec(`./${script} "${inDir}" "${outDir}" "${file}"`, options, (err, stdout, stderr) =>{
+    // TODO: create album folder and create files into it
+
+    const cmd = `./${script} "${file}" "${outDir}"`
+    console.log('RUN: ' + cmd)
+    exec(cmd, options, (err, stdout, stderr) =>{
       if (err){
         console.log(`ERROR: ${err}`)
       }
