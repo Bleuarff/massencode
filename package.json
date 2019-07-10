@@ -1,0 +1,26 @@
+{
+  "name": "massencode",
+  "version": "1.0.0",
+  "description": "Massive flac -> mp3 or opus conversion",
+  "main": "mass_encode.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Bleuarff/massencode.git"
+  },
+  "keywords": [
+    "flac",
+    "mp3"
+  ],
+  "author": "bleuarff",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Bleuarff/massencode/issues"
+  },
+  "homepage": "https://github.com/Bleuarff/massencode#readme",
+  "dependencies": {
+    "mkdirp": "^0.5.1"
+  }
+}
