@@ -1,5 +1,9 @@
 #!/bin/bash
 
+#
+#  DEPRECATED
+#
+
 # convert flac into mp3, or copy file in destination dir
 
 path="$1" # input dir
