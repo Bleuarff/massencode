@@ -5,20 +5,22 @@
 file="$1" # source file
 outputDir="$2" # output dir
 
-mkdir -p "$outputDir" # create outputDir if needed
-
-# get filename and replace file extension
-fileName=$(basename "$file")
-outputFile=${fileName%.flac}.mp3
-# echo "f: ${outputFile}"
-
-outputDir=$(echo "$outputDir" | sed 's:/*$::') # remove trailing slashs, to be consistent
-outputFile="${outputDir}/${outputFile}" # combine to obtain output filepath
-
-echo "outfile: ${outputFile}"
-
 if [ ${file: -5} = ".flac" ]
   then
+
+    mkdir -p "$outputDir" # create outputDir if needed
+
+    # get filename and replace file extension
+    fileName=$(basename "$file")
+    outputFile=${fileName%.flac}.mp3
+    # echo "f: ${outputFile}"
+
+    outputDir=$(echo "$outputDir" | sed 's:/*$::') # remove trailing slashs, to be consistent
+    outputFile="${outputDir}/${outputFile}" # combine to obtain output filepath
+
+    echo "outfile: ${outputFile}"
+
+
     # extract tags & image
     eval $(metaflac --export-tags-to - "$file" | sed "s/=\(.*\)/=\"\1\"/")
     metaflac --export-picture-to "${outputFile%.mp3}.jpg" "$file"
@@ -32,8 +34,6 @@ if [ ${file: -5} = ".flac" ]
             - "$outputFile"
 
     rm "${outputFile%.mp3}.jpg" # delete cover image
-  else # not flac (image): copy file
-    # TODO: get path to create output non-flac
-    echo "noflac: ${}"
-    # cp "$file" "$outputFile"
+  else # not flac: nothing
+    echo "noflac: ${file}"
 fi
