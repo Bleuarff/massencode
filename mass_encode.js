@@ -16,8 +16,8 @@ const exec = require('child_process').exec,
       fs = require('fs'),
       numCpus = require('os').cpus().length,
       mkdirp = require('mkdirp'),
-      util = require('util')
-      // copyFile = util.promisify(fs.copyFile)
+      util = require('util'),
+      copyFile = util.promisify(fs.copyFile)
 
 let inDir = path.normalize(process.argv[2]), // input dir
       outDir = path.normalize(process.argv[3]), // output dir
@@ -43,7 +43,7 @@ script = codec === 'mp3' ? 'encode_mp3' : 'encode_opus'
 
 // find all files, filtering for flac & jpg
 const findCmd =`find "${inDir}" -type f -iregex ".*[flac|jpg]$"`
-console.log('RUN: ' + findCmd)
+// console.log('RUN: ' + findCmd)
 
 exec(findCmd, options, (error, stdout, stderr) => {
   if (error || stderr){
@@ -69,40 +69,53 @@ async function encodeOne(){
     const file = files.shift() // get a file path from array
     const realOutputDir = getOutputDir(file, outDir)
 
+    console.log('process: ' + file)
+
     // if dir not in cache, create it and update cache
     if (!createdDirCache[realOutputDir]){
       mkdirp.sync(realOutputDir)
       createdDirCache[realOutputDir] = 1
     }
 
-    // console.log('output dir: ' + realOutputDir)
-
+    // flac file: convert it
     if (path.extname(file) === '.flac'){
       const cmd = `./${script} "${file}" "${realOutputDir}"`
-      console.log('RUN: ' + cmd)
+      // console.log('RUN: ' + cmd)
 
-      exec(cmd, options, (err, stdout, stderr) =>{
-        if (err){
-          console.log(`ERROR: ${err}`)
-        }
-        console.log(stderr)
-
-      })
+      try{
+        await runEncoder(cmd)
+      }
+      catch(ex){
+        console.error(ex)
+      }
     }
     else{
-      // TODO: just copy file
-      console.log('copy to' + realOutputDir)
-      const base = path.basename(file)
+      // not flac, just copy file
+      const base = path.basename(file),
+            dest = `${realOutputDir}/${base}`
+      // console.log('copy to' + dest)
 
-      // try{
-      //   await copyFile(file, `${realOutputDir}/${base}`)
-      // }
-      // catch(ex){
-      //   console.error(ex.stack)
-      // }
+      try{
+        await copyFile(file, dest)
+      }
+      catch(ex){
+        console.error(ex.stack)
+      }
     }
     encodeOne()
   }
+}
+
+// wraps the call to encoder script in a promise
+function runEncoder(cmd){
+  return new Promise((resolve, reject) => {
+    exec(cmd, options, (err, stdout, stderr) => {
+      if (err)
+        return reject(err)
+      console.log(stderr) // show anyway, no output when no problem 
+      resolve()
+    })
+  })
 }
 
 // get output directory in which to write the file
