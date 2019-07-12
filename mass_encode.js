@@ -17,7 +17,8 @@ const exec = require('child_process').exec,
       numCpus = require('os').cpus().length,
       mkdirp = require('mkdirp'),
       util = require('util'),
-      copyFile = util.promisify(fs.copyFile)
+      copyFile = util.promisify(fs.copyFile),
+      readline = require('readline')
 
 let inDir = path.normalize(process.argv[2]), // input dir
       outDir = path.normalize(process.argv[3]), // output dir
@@ -45,7 +46,7 @@ script = codec === 'mp3' ? 'encode_mp3' : 'encode_opus'
 const findCmd =`find "${inDir}" -type f -iregex ".*[flac|jpg]$"`
 // console.log('RUN: ' + findCmd)
 
-exec(findCmd, options, (error, stdout, stderr) => {
+exec(findCmd, options, async (error, stdout, stderr) => {
   if (error || stderr){
     console.error(`exec error: ${error || stderr}`)
     return
@@ -53,9 +54,18 @@ exec(findCmd, options, (error, stdout, stderr) => {
 
   files = stdout.split('\n')
   files.splice(files.length - 1, 1) // last item is empty, delete
-  console.log(`files: ${files.length}`)
 
-  // TODO: warning if too much files, confirm path and action
+  //  warning if too much files, confirm path
+  if (files.length > 100){
+    // awaits user confirmation before proceeding.
+    const confirm = await getConfirmation(`${files.length} files found in "${inDir}".\nConfirm processing? ([y]/n) `)
+    if (!confirm){
+      console.log('Confirmation denied, exit.')
+      return false
+    }
+  }
+  else
+    console.log(`${files.length} files`)
 
   //  launch as many tasks as cores. Each one launches another when finished
   for (let i = 0; i< numCpus; i++){
@@ -65,6 +75,7 @@ exec(findCmd, options, (error, stdout, stderr) => {
 
 // exec convertion script
 async function encodeOne(){
+
   if (files.length){
     const file = files.shift() // get a file path from array
     const realOutputDir = getOutputDir(file, outDir)
@@ -112,7 +123,7 @@ function runEncoder(cmd){
     exec(cmd, options, (err, stdout, stderr) => {
       if (err)
         return reject(err)
-      console.log(stderr) // show anyway, no output when no problem 
+      console.log(stderr) // show anyway, no output when no problem
       resolve()
     })
   })
@@ -133,4 +144,27 @@ function getOutputDir(file, outDir){
     realOutputDir = `${outDir}/${parentDir}`
 
   return realOutputDir
+}
+
+// wait for user to input y, n or enter.
+async function getConfirmation(message){
+  return new Promise(async resolve => {
+    const rl = readline.createInterface({
+      input: process.stdin,
+      output: process.stdout
+    })
+
+    const validInputs = ['', 'y', 'n']
+    var confirmation
+
+    do{
+      confirmation = await new Promise(resolve => {
+        rl.question(message, (answer) => { resolve(answer) })
+      })
+    }
+    while(validInputs.indexOf(confirmation) === -1)
+
+    rl.close()
+    resolve(confirmation !== 'n')
+  })
 }
