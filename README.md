@@ -14,3 +14,9 @@ Massive flac -> mp3 conversion
   Last parameter `mp3` has a deprecated alternative `opus`.
 
   Creates album directory if needed.
+
+## Dependencies
+
+      npm install
+
+ \+ needs packages `flac` and `lame` for your system.
