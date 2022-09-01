@@ -22,7 +22,7 @@ const exec = require('child_process').exec,
 
 let inDir = path.normalize(process.argv[2]), // input dir
       outDir = path.normalize(process.argv[3]), // output dir
-      codec = process.argv[4]
+      codec = 'mp3'
 
 let files, // array of files' path
     createdDirCache = {}

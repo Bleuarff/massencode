@@ -9,9 +9,7 @@ Massive flac -> mp3 conversion
 
 ## Usage
 
-    node mass_encode.js [input-dir] [output-dir] mp3
-
-  Last parameter `mp3` has a deprecated alternative `opus`.
+    node mass_encode.js [input-dir] [output-dir]
 
   Creates album directory if needed.
 
