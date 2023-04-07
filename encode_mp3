@@ -22,9 +22,8 @@ if [ ${file: -5} = ".flac" ]
 
 
     # extract tags & image
-    # use perl to remove lines that include a non-uppercase char in first word,
-    # aka lines that do not start with a tag name, e.g. values from multiline tag like lyrics;
-    eval $(metaflac --export-tags-to - "$file" | perl -pe "s/^[A-Z]*[^A-Z=\n].*//g" | sed "s/=\(.*\)/=\"\1\"/")
+    # use perl to remove lines that do not include an equal sign. That means multi-lines fields, e.g. lyrics.
+    eval $(metaflac --export-tags-to - "$file" | perl -pe "s/^[^=]+$//g" | sed "s/=\(.*\)/=\"\1\"/")
     metaflac --export-picture-to "${outputFile%.mp3}.jpg" "$file"
 
     # flac: encode into mp3
